@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✿ About ✿</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --pink-deep:#c2637a; --pink-mid:#e8899a; --pink-soft:#f5c6d0;
+    --pink-blush:#fdeef1; --pink-dust:#d6bab8; --cream:#fff8f5;
+    --brown:#5c3d3d; --brown-light:#8a5c5c;
+  }
+  html,body { width:100%; min-height:100%; font-family:'DM Sans',sans-serif; background:var(--cream); }
+  body { opacity:0; transition:opacity 0.5s; }
+  body.visible { opacity:1; }
+  body.fade-out { opacity:0 !important; }
+
+  .bg { position:fixed; inset:0; z-index:0; background: radial-gradient(ellipse 60% 50% at 30% 40%, #fce4ec 0%, transparent 60%), radial-gradient(ellipse 50% 60% at 80% 80%, #f8bbd0 0%, transparent 55%), linear-gradient(160deg,#fff5f7,#fdeef1,#f8d7da); }
+
+  .film-edge { position:fixed; top:0; bottom:0; width:42px; z-index:10; background:var(--brown); display:flex; flex-direction:column; align-items:center; justify-content:space-around; padding:10px 0; }
+  .film-edge.right { right:0; } .film-edge.left { left:0; }
+  .film-hole { width:20px; height:14px; background:var(--cream); border-radius:3px; }
+
+  .main { position:relative; z-index:5; margin:0 42px; padding:40px 40px 80px; max-width:800px; margin-left:auto; margin-right:auto; }
+
+  h1.page-title { font-family:'Great Vibes',cursive; font-size:clamp(48px,7vw,80px); color:var(--brown); text-align:center; margin-bottom:4px; text-shadow:1px 2px 0 rgba(194,99,122,0.15); }
+  .subtitle { font-family:'Playfair Display',serif; font-style:italic; font-size:14px; color:var(--brown-light); text-align:center; margin-bottom:40px; }
+
+  /* Steps */
+  .steps { display:flex; flex-direction:column; gap:0; }
+  .step {
+    display:flex; gap:24px; padding:28px 0; border-bottom:1px solid var(--pink-soft);
+    animation: stepIn 0.6s ease both;
+  }
+  .step:last-child { border-bottom:none; }
+  @keyframes stepIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:none} }
+  .step:nth-child(1){animation-delay:0.1s} .step:nth-child(2){animation-delay:0.2s} .step:nth-child(3){animation-delay:0.3s} .step:nth-child(4){animation-delay:0.4s}
+
+  .step-num {
+    width:56px; min-width:56px; height:56px; border-radius:50%;
+    background:var(--pink-deep); color:white;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Great Vibes',cursive; font-size:28px;
+  }
+  .step-content h3 { font-family:'Playfair Display',serif; font-size:18px; color:var(--brown); margin-bottom:6px; }
+  .step-content p { font-family:'DM Sans',sans-serif; font-size:13px; color:var(--brown-light); line-height:1.7; }
+  .step-icon { font-size:32px; margin-bottom:6px; }
+
+  /* Feature cards */
+  .features { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin:40px 0; }
+  .feat-card {
+    background:rgba(255,255,255,0.7); backdrop-filter:blur(8px);
+    padding:24px 20px; border:1px solid var(--pink-soft);
+    text-align:center; transition:transform 0.3s, box-shadow 0.3s;
+  }
+  .feat-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(194,99,122,0.12); }
+  .feat-icon { font-size:28px; margin-bottom:10px; }
+  .feat-title { font-family:'Playfair Display',serif; font-style:italic; font-size:15px; color:var(--brown); margin-bottom:6px; }
+  .feat-desc { font-family:'DM Sans',sans-serif; font-size:11px; color:var(--brown-light); line-height:1.6; }
+
+  .cta-block { text-align:center; margin-top:48px; }
+  .cta-block h2 { font-family:'Great Vibes',cursive; font-size:40px; color:var(--brown); margin-bottom:12px; }
+  .cta-btn { display:inline-block; padding:16px 40px; background:var(--pink-deep); color:white; text-decoration:none; font-family:'DM Sans',sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; box-shadow:5px 5px 0 var(--brown); transition:all 0.2s; }
+  .cta-btn:hover { transform:translate(3px,3px); box-shadow:2px 2px 0 var(--brown); }
+
+  /* Divider */
+  .divider { width:80px; height:1px; background:var(--pink-mid); margin:32px auto; position:relative; }
+  .divider::before { content:'✿'; position:absolute; top:-9px; left:50%; transform:translateX(-50%); font-size:14px; color:var(--pink-mid); background:var(--cream); padding:0 6px; }
+
+  /* Bottom nav */
+  .bottom-nav { position:fixed; bottom:0; left:42px; right:42px; height:48px; z-index:20; background:rgba(255,245,247,0.92); backdrop-filter:blur(10px); border-top:1px solid var(--pink-soft); display:flex; align-items:center; justify-content:center; gap:48px; }
+  .bottom-nav a { font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:var(--brown-light); text-decoration:none; transition:color 0.2s; }
+  .bottom-nav a:hover { color:var(--pink-deep); }
+
+  .back-btn {
+    position:fixed; top:20px; left:70px; z-index:20;
+    font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--brown-light); text-decoration:none;
+    padding:8px 16px; border:1px solid var(--pink-soft);
+    background:rgba(255,255,255,0.7); backdrop-filter:blur(8px);
+    transition:all 0.2s;
+  }
+  .back-btn:hover { background:var(--pink-deep); color:white; border-color:var(--pink-deep); }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn" data-nav>← back</a>
+
+<div class="bg"></div>
+<div class="film-edge left" id="filmL"></div>
+<div class="film-edge right" id="filmR"></div>
+
+<div class="main">
+  <h1 class="page-title">How It Works</h1>
+  <p class="subtitle">take photos · customize · cherish forever</p>
+
+  <div class="features">
+    <div class="feat-card"><div class="feat-icon">📸</div><div class="feat-title">Real Camera</div><div class="feat-desc">Uses your device's camera for authentic live photobooth shots</div></div>
+    <div class="feat-card"><div class="feat-icon">🎀</div><div class="feat-title">5 Layouts</div><div class="feat-desc">Solo, classic strip, tall, grid, and full-frame — pick your vibe</div></div>
+    <div class="feat-card"><div class="feat-icon">✨</div><div class="feat-title">Stickers & Text</div><div class="feat-desc">Decorate your strip with kawaii stickers and personal messages</div></div>
+    <div class="feat-card"><div class="feat-icon">💾</div><div class="feat-title">Save & Download</div><div class="feat-desc">Keep your strips in the gallery or download as PNG anytime</div></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-icon">🎞</div>
+        <h3>Choose Your Layout</h3>
+        <p>Select from five different polaroid strip layouts — from a single solo shot to a full 2×4 grid. Each size gives you a different kind of memory strip to treasure.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-icon">📷</div>
+        <h3>Strike a Pose</h3>
+        <p>Head into the photobooth, use the timer if you need a moment to prepare, and snap your photos. Apply filters — warm, rose, dream, vintage — right in the viewfinder.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-icon">🌸</div>
+        <h3>Decorate & Customize</h3>
+        <p>Add kawaii stickers, change the strip color to your favourite shade of pink, choose a frame style, and write a caption that captures the moment perfectly.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-icon">💖</div>
+        <h3>Save to Gallery</h3>
+        <p>Save your finished strip to the gallery to revisit anytime, or download it as a PNG to share with friends, print, or use as a wallpaper. Every memory, kept forever.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-block">
+    <h2>Ready to shoot? ♡</h2>
+    <a href="choose-size.html" class="cta-btn" data-nav>Enter the Booth ✦</a>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <a href="index.html" data-nav>Home</a>
+
+  <a href="gallery.html" data-nav>Gallery</a>
+
+</div>
+
+<script>
+  window.addEventListener('load', () => setTimeout(() => document.body.classList.add('visible'), 50));
+  ['filmL','filmR'].forEach(id => {
+    const el=document.getElementById(id);
+    for(let i=0;i<30;i++){const h=document.createElement('div');h.className='film-hole';el.appendChild(h);}
+  });
+  document.querySelectorAll('[data-nav]').forEach(el => {
+    el.addEventListener('click', e => {
+      const href=el.getAttribute('href'); if(!href||href==='#') return;
+      e.preventDefault(); document.body.classList.add('fade-out');
+      setTimeout(()=>window.location.href=href,450);
+    });
+  });
+</script>
+</body>
+</html>

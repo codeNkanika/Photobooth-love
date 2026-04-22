@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✿ Gallery ✿</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --pink-deep:#c2637a; --pink-mid:#e8899a; --pink-soft:#f5c6d0;
+    --pink-blush:#fdeef1; --pink-dust:#d6bab8; --cream:#fff8f5;
+    --brown:#5c3d3d; --brown-light:#8a5c5c;
+  }
+  html,body { width:100%; min-height:100%; font-family:'DM Sans',sans-serif; background:var(--cream); }
+  body { opacity:0; transition:opacity 0.5s; }
+  body.visible { opacity:1; }
+  body.fade-out { opacity:0 !important; }
+
+  .bg { position:fixed; inset:0; z-index:0; background: radial-gradient(ellipse 80% 60% at 50% 0%, #fce4ec 0%, transparent 60%), linear-gradient(160deg,#fff5f7,#fdeef1 50%,#f8d7da); }
+
+  .film-edge { position:fixed; top:0; bottom:0; width:42px; z-index:10; background:var(--brown); display:flex; flex-direction:column; align-items:center; justify-content:space-around; padding:10px 0; }
+  .film-edge.right { right:0; } .film-edge.left { left:0; }
+  .film-hole { width:20px; height:14px; background:var(--cream); border-radius:3px; }
+
+  .main { position:relative; z-index:5; margin:0 42px; min-height:100vh; padding:0 24px 80px; }
+
+  .header { padding:24px 0 16px; text-align:center; position:sticky; top:0; background:rgba(255,248,245,0.92); backdrop-filter:blur(10px); z-index:30; border-bottom:1px solid var(--pink-soft); margin:0 -24px; padding-left:24px; padding-right:24px; }
+  .header h1 { font-family:'Great Vibes',cursive; font-size:clamp(36px,5vw,60px); color:var(--brown); }
+  .header p { font-family:'Playfair Display',serif; font-style:italic; font-size:12px; color:var(--brown-light); margin-top:4px; }
+
+  /* Filter tabs */
+  .filter-tabs { display:flex; gap:12px; justify-content:center; margin:16px 0; flex-wrap:wrap; }
+  .ftab { padding:6px 16px; border:1px solid var(--pink-soft); border-radius:20px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--brown-light); background:white; transition:all 0.2s; }
+  .ftab.active, .ftab:hover { background:var(--pink-deep); color:white; border-color:var(--pink-deep); }
+
+  /* Gallery grid */
+  .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:24px; padding-top:24px; }
+
+  .gallery-item {
+    cursor:pointer; position:relative;
+    animation: itemIn 0.5s ease both;
+  }
+  @keyframes itemIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+
+  .gallery-item:nth-child(3n+1) .polaroid-wrap { transform:rotate(-2deg); }
+  .gallery-item:nth-child(3n+2) .polaroid-wrap { transform:rotate(1.5deg); }
+  .gallery-item:nth-child(3n+3) .polaroid-wrap { transform:rotate(-0.5deg); }
+
+  .polaroid-wrap {
+    background:var(--pink-dust); padding:8px 8px 24px;
+    box-shadow:0 4px 16px rgba(92,61,61,0.15);
+    transition:transform 0.4s cubic-bezier(.34,1.56,.64,1), box-shadow 0.3s;
+  }
+  .gallery-item:hover .polaroid-wrap { transform:rotate(0deg) translateY(-8px) scale(1.04) !important; box-shadow:0 16px 40px rgba(92,61,61,0.22); }
+
+  .polaroid-wrap img { width:100%; aspect-ratio:3/4; object-fit:cover; display:block; }
+
+  .polaroid-meta { margin-top:4px; text-align:center; }
+  .meta-date { font-family:'DM Sans',sans-serif; font-size:9px; letter-spacing:1px; color:var(--brown-light); }
+  .meta-layout { font-family:'Playfair Display',serif; font-style:italic; font-size:11px; color:var(--pink-deep); }
+
+  /* Delete btn */
+  .delete-btn {
+    position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%;
+    background:var(--pink-deep); color:white; border:none; cursor:pointer;
+    font-size:10px; display:none; align-items:center; justify-content:center;
+    z-index:5;
+  }
+  .gallery-item:hover .delete-btn { display:flex; }
+
+  /* Empty state */
+  .empty-state { text-align:center; padding:80px 20px; }
+  .empty-state .icon { font-size:60px; margin-bottom:16px; opacity:0.4; }
+  .empty-state h2 { font-family:'Great Vibes',cursive; font-size:40px; color:var(--brown); margin-bottom:8px; }
+  .empty-state p { font-family:'Playfair Display',serif; font-style:italic; font-size:14px; color:var(--brown-light); margin-bottom:24px; }
+  .start-btn { display:inline-block; padding:14px 32px; background:var(--pink-deep); color:white; text-decoration:none; font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; box-shadow:4px 4px 0 var(--brown); transition:all 0.2s; }
+  .start-btn:hover { transform:translate(2px,2px); box-shadow:2px 2px 0 var(--brown); }
+
+  /* Lightbox */
+  .lightbox { position:fixed; inset:0; z-index:100; background:rgba(92,61,61,0.85); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; }
+  .lightbox.open { display:flex; }
+  .lb-inner { position:relative; max-width:90vw; max-height:90vh; }
+  .lb-inner img { max-width:100%; max-height:80vh; object-fit:contain; box-shadow:0 24px 80px rgba(0,0,0,0.4); }
+  .lb-close { position:absolute; top:-16px; right:-16px; width:36px; height:36px; border-radius:50%; background:var(--pink-deep); color:white; border:none; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
+  .lb-download { display:block; margin:12px auto 0; padding:10px 28px; background:var(--pink-deep); color:white; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; }
+
+  /* Bottom nav */
+  .bottom-nav { position:fixed; bottom:0; left:42px; right:42px; height:48px; z-index:20; background:rgba(255,245,247,0.92); backdrop-filter:blur(10px); border-top:1px solid var(--pink-soft); display:flex; align-items:center; justify-content:center; gap:48px; }
+  .bottom-nav a { font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:var(--brown-light); text-decoration:none; transition:color 0.2s; }
+  .bottom-nav a:hover, .bottom-nav a.active { color:var(--pink-deep); }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="film-edge left" id="filmL"></div>
+<div class="film-edge right" id="filmR"></div>
+
+<div class="main">
+  <div class="header">
+    <h1>Gallery</h1>
+    <p>your sweetest memories, all in one place</p>
+    <div class="filter-tabs">
+      <div class="ftab active" data-filter="all">All</div>
+      <div class="ftab" data-filter="1x1">Solo</div>
+      <div class="ftab" data-filter="1x3">Classic</div>
+      <div class="ftab" data-filter="1x4">Tall</div>
+      <div class="ftab" data-filter="2x2">Grid</div>
+      <div class="ftab" data-filter="2x4">Full</div>
+    </div>
+  </div>
+
+  <div class="gallery-grid" id="galleryGrid"></div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <div class="lb-inner">
+    <button class="lb-close" id="lbClose">✕</button>
+    <img id="lbImg" src="" alt="Strip">
+    <button class="lb-download" id="lbDownload">↓ Download</button>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <a href="index.html" data-nav>Home</a>
+  <a href="gallery.html" class="active">Gallery</a>
+</div>
+
+<script>
+  window.addEventListener('load', () => setTimeout(() => document.body.classList.add('visible'), 50));
+  ['filmL','filmR'].forEach(id => {
+    const el=document.getElementById(id);
+    for(let i=0;i<30;i++){const h=document.createElement('div');h.className='film-hole';el.appendChild(h);}
+  });
+
+  let gallery = JSON.parse(localStorage.getItem('pb_gallery')||'[]');
+  let activeFilter = 'all';
+
+  function renderGallery() {
+    const grid = document.getElementById('galleryGrid');
+    grid.innerHTML = '';
+    const items = activeFilter==='all' ? gallery : gallery.filter(i=>i.layout===activeFilter);
+
+    if(items.length===0) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">📷</div>
+        <h2>No memories yet</h2>
+        <p>Step into the booth and make some magic!</p>
+        <a href="choose-size.html" class="start-btn">Start Shooting ✦</a>
+      </div>`;
+      return;
+    }
+
+    items.forEach((item, i) => {
+      const realIdx = gallery.indexOf(item);
+      const div = document.createElement('div');
+      div.className = 'gallery-item';
+      div.style.animationDelay = (i*0.06)+'s';
+      div.innerHTML = `
+        <button class="delete-btn" data-idx="${realIdx}">✕</button>
+        <div class="polaroid-wrap">
+          <img src="${item.img}" alt="Strip">
+          <div class="polaroid-meta">
+            <div class="meta-date">${item.date||''}</div>
+            <div class="meta-layout">${item.caption||'memories ♡'}</div>
+          </div>
+        </div>`;
+      div.querySelector('.polaroid-wrap').addEventListener('click',()=>openLightbox(item.img));
+      div.querySelector('.delete-btn').addEventListener('click',e=>{
+        e.stopPropagation();
+        gallery.splice(realIdx,1);
+        localStorage.setItem('pb_gallery',JSON.stringify(gallery));
+        renderGallery();
+      });
+      grid.appendChild(div);
+    });
+  }
+
+  function openLightbox(src) {
+    document.getElementById('lbImg').src=src;
+    document.getElementById('lightbox').classList.add('open');
+  }
+  document.getElementById('lbClose').addEventListener('click',()=>document.getElementById('lightbox').classList.remove('open'));
+  document.getElementById('lightbox').addEventListener('click',e=>{ if(e.target===document.getElementById('lightbox')) document.getElementById('lightbox').classList.remove('open'); });
+  document.getElementById('lbDownload').addEventListener('click',()=>{
+    const a=document.createElement('a');
+    a.download='strip.png'; a.href=document.getElementById('lbImg').src; a.click();
+  });
+
+  document.querySelectorAll('.ftab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('.ftab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      activeFilter=t.dataset.filter;
+      renderGallery();
+    });
+  });
+
+  renderGallery();
+
+  document.querySelectorAll('[data-nav]').forEach(el=>{
+    el.addEventListener('click',e=>{
+      const href=el.getAttribute('href'); if(!href||href==='#') return;
+      e.preventDefault(); document.body.classList.add('fade-out');
+      setTimeout(()=>window.location.href=href,450);
+    });
+  });
+</script>
+</body>
+</html>

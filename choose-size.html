@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✿ Choose Your Size ✿</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --pink-deep: #c2637a; --pink-mid: #e8899a; --pink-soft: #f5c6d0;
+    --pink-blush: #fdeef1; --pink-dust: #d6bab8; --cream: #fff8f5;
+    --brown: #5c3d3d; --brown-light: #8a5c5c;
+  }
+  html, body { width:100%; height:100%; overflow:hidden; font-family:'DM Sans',sans-serif; background:var(--cream); }
+  body { opacity:0; transition:opacity 0.5s ease; }
+  body.visible { opacity:1; }
+  body.fade-out { opacity:0 !important; }
+
+  .bg {
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse 50% 60% at 10% 80%, #fce4ec 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 20%, #f8bbd0 0%, transparent 60%),
+      linear-gradient(135deg, #fff5f7 0%, #fdeef1 60%, #f8d7da 100%);
+  }
+
+  .film-edge {
+    position:fixed; top:0; bottom:0; width:42px; z-index:10;
+    background: var(--brown);
+    display:flex; flex-direction:column; align-items:center; justify-content:space-around; padding:10px 0;
+  }
+  .film-edge.right { right:0; }
+  .film-edge.left  { left:0; }
+  .film-hole { width:20px; height:14px; background:var(--cream); border-radius:3px; opacity:0.9; }
+
+  .page { position:fixed; inset:0 42px; z-index:5; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+  .page-title {
+    text-align:center; margin-bottom:8px;
+  }
+  .page-title h1 {
+    font-family:'Great Vibes',cursive; font-size:clamp(40px,6vw,72px);
+    color:var(--brown); text-shadow:1px 2px 0 rgba(194,99,122,0.2);
+  }
+  .page-title p {
+    font-family:'Playfair Display',serif; font-style:italic;
+    font-size:13px; color:var(--brown-light); margin-top:4px;
+  }
+
+  /* Pink ribbon divider */
+  .divider {
+    width:120px; height:1px; background:var(--pink-mid);
+    margin:12px auto 28px; position:relative;
+  }
+  .divider::before, .divider::after {
+    content:'✿'; position:absolute; top:-9px; font-size:14px; color:var(--pink-mid);
+  }
+  .divider::before { left:-18px; }
+  .divider::after  { right:-18px; }
+
+  /* Grid of size options */
+  .sizes-grid {
+    display:flex; gap:20px; align-items:flex-end; justify-content:center; flex-wrap:wrap;
+  }
+
+  .size-card {
+    text-decoration:none; display:flex; flex-direction:column; align-items:center;
+    gap:10px; cursor:pointer;
+    animation: cardIn 0.6s ease both;
+  }
+  .size-card:nth-child(1) { animation-delay:0.1s; }
+  .size-card:nth-child(2) { animation-delay:0.2s; }
+  .size-card:nth-child(3) { animation-delay:0.3s; }
+  .size-card:nth-child(4) { animation-delay:0.4s; }
+  .size-card:nth-child(5) { animation-delay:0.5s; }
+
+  @keyframes cardIn {
+    from { opacity:0; transform:translateY(30px) rotate(-3deg); }
+    to   { opacity:1; transform:translateY(0) rotate(0deg); }
+  }
+
+  .polaroid-preview {
+    background: var(--pink-dust);
+    padding: 10px 10px 22px;
+    box-shadow: 0 6px 24px rgba(92,61,61,0.18), 0 2px 4px rgba(92,61,61,0.08);
+    transition: transform 0.4s cubic-bezier(.34,1.56,.64,1), box-shadow 0.3s;
+    position:relative;
+  }
+  .size-card:hover .polaroid-preview {
+    transform: translateY(-12px) rotate(-2deg) scale(1.05);
+    box-shadow: 0 20px 48px rgba(92,61,61,0.25);
+  }
+
+  .photo-cell {
+    background: linear-gradient(135deg, var(--pink-blush), var(--pink-soft));
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+  }
+
+  /* Layouts */
+  .layout-1x1 .photo-cell { width:80px; height:80px; }
+  .layout-1x4 { display:flex; flex-direction:column; gap:4px; width:80px; }
+  .layout-1x4 .photo-cell { width:80px; height:56px; }
+  .layout-2x2 { display:grid; grid-template-columns:1fr 1fr; gap:4px; width:130px; }
+  .layout-2x2 .photo-cell { width:61px; height:61px; }
+  .layout-2x4 { display:grid; grid-template-columns:1fr 1fr; gap:4px; width:130px; }
+  .layout-2x4 .photo-cell { width:61px; height:46px; }
+  .layout-1x3 { display:flex; flex-direction:column; gap:4px; width:90px; }
+  .layout-1x3 .photo-cell { width:90px; height:64px; }
+
+  /* Badge label */
+  .size-label {
+    font-family:'DM Sans',sans-serif; font-size:10px; font-weight:500;
+    letter-spacing:2px; text-transform:uppercase; color:var(--brown-light);
+    margin-top:4px;
+  }
+  .size-name {
+    font-family:'Playfair Display',serif; font-style:italic;
+    font-size:13px; color:var(--pink-deep); margin-top:2px;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position:fixed; bottom:0; left:42px; right:42px; height:48px; z-index:20;
+    background:rgba(255,245,247,0.88); backdrop-filter:blur(10px);
+    border-top:1px solid var(--pink-soft);
+    display:flex; align-items:center; justify-content:center; gap:48px;
+  }
+  .bottom-nav a {
+    font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2.5px;
+    text-transform:uppercase; color:var(--brown-light); text-decoration:none;
+    transition:color 0.2s;
+  }
+  .bottom-nav a:hover, .bottom-nav a.active { color:var(--pink-deep); }
+
+  .back-btn {
+    position:fixed; top:20px; left:70px; z-index:20;
+    font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--brown-light); text-decoration:none;
+    padding:8px 16px; border:1px solid var(--pink-soft);
+    background:rgba(255,255,255,0.7); backdrop-filter:blur(8px);
+    transition:all 0.2s;
+  }
+  .back-btn:hover { background:var(--pink-deep); color:white; border-color:var(--pink-deep); }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="film-edge left" id="filmL"></div>
+<div class="film-edge right" id="filmR"></div>
+
+<a href="about.html" class="back-btn" data-nav>← back</a>
+
+<div class="page">
+  <div class="page-title">
+    <h1>Choose Your Size</h1>
+    <p>pick the perfect layout for your memories</p>
+  </div>
+  <div class="divider"></div>
+
+  <div class="sizes-grid">
+
+    <!-- 1x1 -->
+    <a href="photo.html?layout=1x1" class="size-card" data-nav>
+      <div class="polaroid-preview">
+        <div class="layout-1x1">
+          <div class="photo-cell">🌸</div>
+        </div>
+      </div>
+      <div class="size-label">1 × 1</div>
+      <div class="size-name">Solo Shot</div>
+    </a>
+
+    <!-- 1x3 -->
+    <a href="photo.html?layout=1x3" class="size-card" data-nav>
+      <div class="polaroid-preview">
+        <div class="layout-1x3">
+          <div class="photo-cell">💕</div>
+          <div class="photo-cell">🌷</div>
+          <div class="photo-cell">✨</div>
+        </div>
+      </div>
+      <div class="size-label">1 × 3</div>
+      <div class="size-name">Classic Strip</div>
+    </a>
+
+    <!-- 1x4 -->
+    <a href="photo.html" class="size-card" data-nav>
+      <div class="polaroid-preview">
+        <div class="layout-1x4">
+          <div class="photo-cell">🎀</div>
+          <div class="photo-cell">🌺</div>
+          <div class="photo-cell">💖</div>
+          <div class="photo-cell">🌸</div>
+        </div>
+      </div>
+      <div class="size-label">1 × 4</div>
+      <div class="size-name">Tall Strip</div>
+    </a>
+
+    <!-- 2x2 -->
+    <a href="photo.html?layout=2x2" class="size-card" data-nav>
+      <div class="polaroid-preview">
+        <div class="layout-2x2">
+          <div class="photo-cell">🍓</div>
+          <div class="photo-cell">🌸</div>
+          <div class="photo-cell">💕</div>
+          <div class="photo-cell">✿</div>
+        </div>
+      </div>
+      <div class="size-label">2 × 2</div>
+      <div class="size-name">Grid Quad</div>
+    </a>
+
+    <!-- 2x4 -->
+    <a href="photo.html?layout=2x4" class="size-card" data-nav>
+      <div class="polaroid-preview">
+        <div class="layout-2x4">
+          <div class="photo-cell">🌷</div>
+          <div class="photo-cell">🎀</div>
+          <div class="photo-cell">🌸</div>
+          <div class="photo-cell">💖</div>
+          <div class="photo-cell">✨</div>
+          <div class="photo-cell">🌺</div>
+          <div class="photo-cell">🍓</div>
+          <div class="photo-cell">💕</div>
+        </div>
+      </div>
+      <div class="size-label">2 × 4</div>
+      <div class="size-name">Full Frame</div>
+    </a>
+
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <a href="index.html" data-nav>Home</a>
+
+  <a href="gallery.html" data-nav>Gallery</a>
+
+</div>
+
+<script>
+  window.addEventListener('load', () => setTimeout(() => document.body.classList.add('visible'), 50));
+  ['filmL','filmR'].forEach(id => {
+    const el = document.getElementById(id);
+    for (let i=0;i<22;i++) { const h=document.createElement('div'); h.className='film-hole'; el.appendChild(h); }
+  });
+  document.querySelectorAll('[data-nav]').forEach(el => {
+    el.addEventListener('click', e => {
+      const href = el.getAttribute('href');
+      if (!href || href==='#') return;
+      e.preventDefault();
+      document.body.classList.add('fade-out');
+      setTimeout(()=>window.location.href=href, 450);
+    });
+  });
+</script>
+</body>
+</html>
