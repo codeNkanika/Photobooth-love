@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✿ Photobooth Camera ✿</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --pink-deep:#c2637a; --pink-mid:#e8899a; --pink-soft:#f5c6d0;
+    --pink-blush:#fdeef1; --pink-dust:#d6bab8; --cream:#fff8f5;
+    --brown:#5c3d3d; --brown-light:#8a5c5c;
+  }
+  html,body { width:100%; height:100%; overflow:hidden; font-family:'DM Sans',sans-serif; background:var(--cream); }
+  body { opacity:0; transition:opacity 0.5s; }
+  body.visible { opacity:1; }
+  body.fade-out { opacity:0 !important; }
+
+  .bg {
+    position:fixed; inset:0; z-index:0;
+    background: radial-gradient(ellipse 70% 70% at 50% 50%, #fce4ec 0%, #fff5f7 70%);
+  }
+
+  .film-edge { position:fixed; top:0; bottom:0; width:42px; z-index:10; background:var(--brown); display:flex; flex-direction:column; align-items:center; justify-content:space-around; padding:10px 0; }
+  .film-edge.right { right:0; } .film-edge.left { left:0; }
+  .film-hole { width:20px; height:14px; background:var(--cream); border-radius:3px; }
+
+  /* ── MODE SELECTOR ── */
+  .mode-screen {
+    position:fixed; inset:0 42px 48px; z-index:5;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:32px;
+  }
+  .mode-title { font-family:'Great Vibes',cursive; font-size:clamp(36px,5vw,60px); color:var(--brown); text-align:center; }
+  .mode-sub { font-family:'Playfair Display',serif; font-style:italic; font-size:13px; color:var(--brown-light); margin-top:-20px; }
+  .mode-divider { width:80px; height:1px; background:var(--pink-mid); position:relative; }
+  .mode-divider::before { content:'✿'; position:absolute; top:-9px; left:50%; transform:translateX(-50%); font-size:14px; color:var(--pink-mid); background:var(--cream); padding:0 6px; }
+
+  .mode-cards { display:flex; gap:28px; align-items:stretch; }
+  .mode-card {
+    width:200px; padding:32px 24px; cursor:pointer;
+    background:rgba(255,255,255,0.75); backdrop-filter:blur(10px);
+    border:2px solid var(--pink-soft);
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+    transition:all 0.35s cubic-bezier(.34,1.56,.64,1);
+    position:relative; overflow:hidden;
+  }
+  .mode-card::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg, var(--pink-blush), var(--pink-soft));
+    opacity:0; transition:opacity 0.3s;
+  }
+  .mode-card:hover { transform:translateY(-8px); border-color:var(--pink-deep); box-shadow:0 20px 48px rgba(194,99,122,0.18); }
+  .mode-card:hover::before { opacity:1; }
+  .mode-card * { position:relative; z-index:1; }
+  .mode-icon { font-size:52px; line-height:1; }
+  .mode-name { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color:var(--brown); }
+  .mode-desc { font-family:'DM Sans',sans-serif; font-size:11px; color:var(--brown-light); text-align:center; line-height:1.6; }
+  .mode-badge { padding:6px 14px; background:var(--pink-deep); color:white; font-family:'DM Sans',sans-serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; transition:background 0.2s; }
+  .mode-card:hover .mode-badge { background:var(--brown); }
+
+  /* ── MAIN BOOTH LAYOUT ── */
+  .main {
+    position:fixed; inset:0 42px 48px; z-index:5;
+    display:none; align-items:center; justify-content:center; gap:28px;
+  }
+  .main.active { display:flex; }
+
+  /* ── CAMERA SECTION ── */
+  .camera-section { display:flex; flex-direction:column; align-items:center; gap:14px; }
+
+  .camera-frame {
+    position:relative; width:340px; height:280px;
+    background:#1a0a0a; border:3px solid var(--pink-dust);
+    box-shadow: 0 0 0 8px var(--pink-blush), 0 12px 40px rgba(92,61,61,0.3);
+    overflow:hidden; flex-shrink:0;
+  }
+  .camera-frame::after {
+    content:''; position:absolute; inset:0; z-index:3;
+    background:linear-gradient(transparent 0%, rgba(214,186,184,0.06) 100%);
+    pointer-events:none;
+  }
+
+  video {
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover; display:block;
+    transform:scaleX(-1);
+  }
+  .flash { position:absolute; inset:0; z-index:20; background:white; opacity:0; pointer-events:none; transition:opacity 0.05s; }
+  .flash.active { opacity:1; }
+  .countdown-overlay {
+    position:absolute; inset:0; z-index:15;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Great Vibes',cursive; font-size:90px;
+    color:white; text-shadow:0 0 30px rgba(232,137,154,0.9);
+    opacity:0; pointer-events:none; transition:opacity 0.3s;
+  }
+  .countdown-overlay.show { opacity:1; }
+  .vf-corner { position:absolute; width:20px; height:20px; z-index:5; }
+  .vf-corner.tl { top:8px; left:8px; border-top:2px solid var(--pink-mid); border-left:2px solid var(--pink-mid); }
+  .vf-corner.tr { top:8px; right:8px; border-top:2px solid var(--pink-mid); border-right:2px solid var(--pink-mid); }
+  .vf-corner.bl { bottom:8px; left:8px; border-bottom:2px solid var(--pink-mid); border-left:2px solid var(--pink-mid); }
+  .vf-corner.br { bottom:8px; right:8px; border-bottom:2px solid var(--pink-mid); border-right:2px solid var(--pink-mid); }
+
+  /* ── UPLOAD FRAME ── */
+  .upload-frame {
+    width:340px; height:280px;
+    border:3px dashed var(--pink-mid);
+    background:var(--pink-blush);
+    display:none; align-items:center; justify-content:center;
+    flex-direction:column; gap:12px; cursor:pointer;
+    transition:all 0.3s; position:relative;
+    box-shadow: 0 0 0 8px var(--pink-blush), 0 12px 40px rgba(92,61,61,0.1);
+  }
+  .upload-frame.active { display:flex; }
+  .upload-frame:hover { border-color:var(--pink-deep); background:#fde8ed; }
+  .upload-frame.has-img { border-style:solid; }
+  .upload-frame img.upload-preview { width:100%; height:100%; object-fit:cover; display:none; position:absolute; inset:0; }
+  .upload-frame.has-img img.upload-preview { display:block; }
+  .upload-frame.has-img .upload-placeholder { display:none; }
+  .upload-placeholder { display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none; }
+  .upload-icon { font-size:40px; opacity:0.5; }
+  .upload-text { font-family:'Playfair Display',serif; font-style:italic; font-size:13px; color:var(--brown-light); }
+  .upload-sub { font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:1px; color:var(--pink-mid); text-transform:uppercase; }
+  input[type=file] { display:none; }
+
+  /* Shot counter */
+  .shot-counter { display:flex; gap:8px; align-items:center; }
+  .shot-dot { width:10px; height:10px; border-radius:50%; border:2px solid var(--pink-mid); background:transparent; transition:background 0.3s; }
+  .shot-dot.taken { background:var(--pink-deep); border-color:var(--pink-deep); }
+
+  /* Filters */
+  .filter-bar { display:flex; gap:8px; align-items:center; justify-content:center; }
+  .filter-btn {
+    width:34px; height:34px; border-radius:50%; border:2px solid var(--pink-soft);
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    background:white; transition:all 0.2s; color:var(--brown-light);
+    font-family:'DM Sans',sans-serif; font-size:11px;
+  }
+  .filter-btn:hover, .filter-btn.active { border-color:var(--pink-deep); background:var(--pink-blush); }
+
+  /* Controls */
+  .controls { display:flex; gap:14px; align-items:center; }
+  .shutter-btn {
+    width:66px; height:66px; border-radius:50%;
+    background:var(--pink-deep); border:4px solid var(--pink-blush);
+    box-shadow:0 0 0 3px var(--pink-deep), 0 8px 24px rgba(194,99,122,0.4);
+    cursor:pointer; position:relative; overflow:hidden;
+    transition:transform 0.1s, box-shadow 0.1s;
+  }
+  .shutter-btn:hover { transform:scale(1.05); }
+  .shutter-btn:active { transform:scale(0.95); }
+  .shutter-btn::after { content:''; position:absolute; inset:8px; border-radius:50%; background:rgba(255,255,255,0.2); }
+  .ctrl-btn {
+    padding:9px 16px; border:2px solid var(--pink-soft); border-radius:2px;
+    background:rgba(255,255,255,0.8); cursor:pointer;
+    font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--brown-light); transition:all 0.2s;
+  }
+  .ctrl-btn:hover, .ctrl-btn.active { background:var(--pink-deep); color:white; border-color:var(--pink-deep); }
+  .ctrl-btn:disabled { opacity:0.4; pointer-events:none; }
+  .status-text {
+    font-family:'Playfair Display',serif; font-style:italic;
+    font-size:12px; color:var(--pink-mid); text-align:center; min-height:18px;
+  }
+
+  /* ── STRIP PREVIEW (RIGHT PANEL) ── */
+  .strip-section { display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .strip-label { font-family:'Great Vibes',cursive; font-size:30px; color:var(--brown); }
+
+  /* The outer polaroid wrapper — width auto so it wraps its content */
+  .strip-preview {
+    background:var(--pink-dust);
+    padding:10px 10px 22px;
+    box-shadow:0 8px 32px rgba(92,61,61,0.2);
+    position:relative;
+    display:inline-block; /* shrink-wrap to content */
+  }
+  .strip-preview::before { content:''; position:absolute; top:5px; left:5px; right:5px; height:1px; background:rgba(255,255,255,0.4); }
+
+  /* Single-column slots */
+  .preview-slot {
+    width:96px; height:72px; margin-bottom:5px;
+    background:linear-gradient(135deg,#e8c8cc,#f5d6d8);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; position:relative; overflow:hidden;
+  }
+  .preview-slot:last-of-type { margin-bottom:0; }
+  .preview-slot img { width:100%; height:100%; object-fit:cover; display:none; }
+  .preview-slot.filled img { display:block; }
+  .preview-slot.current { outline:2px solid var(--pink-deep); outline-offset:2px; animation:pulseOutline 1s ease-in-out infinite; }
+  @keyframes pulseOutline { 0%,100%{outline-color:var(--pink-deep)} 50%{outline-color:transparent} }
+
+  /* Delete button on each slot */
+  .slot-delete {
+    position:absolute; top:3px; right:3px; z-index:10;
+    width:20px; height:20px; border-radius:50%;
+    background:rgba(194,99,122,0.9); color:white;
+    border:none; cursor:pointer; font-size:11px; line-height:1;
+    display:none; align-items:center; justify-content:center;
+    transition:background 0.2s; padding:0;
+  }
+  .slot-delete:hover { background:var(--brown); }
+  .preview-slot.filled .slot-delete { display:flex; }
+
+  /* Grid strip container for 2-col layouts */
+  .strip-grid {
+    display:grid;
+    gap:4px;
+  }
+
+  /* Caption inside the polaroid */
+  .strip-caption-input {
+    width:100%; background:transparent; border:none; border-bottom:1px solid var(--pink-mid);
+    font-family:'DM Sans',sans-serif; font-size:9px; color:var(--pink-deep);
+    text-align:center; letter-spacing:1px; outline:none; margin-top:8px; padding:4px 0;
+    display:block;
+  }
+  .strip-caption-input::placeholder { color:var(--pink-soft); }
+
+  .done-btn {
+    padding:12px 28px; background:var(--pink-deep); color:white; border:none;
+    cursor:pointer; border-radius:2px;
+    font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:3px;
+    text-transform:uppercase; box-shadow:4px 4px 0 var(--brown); transition:all 0.2s;
+    display:none;
+  }
+  .done-btn:hover { transform:translate(2px,2px); box-shadow:2px 2px 0 var(--brown); }
+  .done-btn.visible { display:block; }
+
+  /* Mode toggle pill */
+  .mode-toggle {
+    position:fixed; top:14px; right:60px; z-index:20;
+    display:none; gap:0; background:var(--pink-blush); border:1px solid var(--pink-soft);
+    border-radius:20px; overflow:hidden;
+  }
+  .mode-toggle.active { display:flex; }
+  .mtab {
+    padding:7px 16px; font-family:'DM Sans',sans-serif; font-size:9px;
+    letter-spacing:2px; text-transform:uppercase; color:var(--brown-light);
+    cursor:pointer; transition:all 0.2s; background:transparent; border:none;
+  }
+  .mtab.on { background:var(--pink-deep); color:white; border-radius:20px; }
+
+  .back-btn { position:fixed; top:14px; left:60px; z-index:20; font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--brown-light); text-decoration:none; padding:8px 16px; border:1px solid var(--pink-soft); background:rgba(255,255,255,0.7); backdrop-filter:blur(8px); transition:all 0.2s; }
+  .back-btn:hover { background:var(--pink-deep); color:white; border-color:var(--pink-deep); }
+
+  .bottom-nav { position:fixed; bottom:0; left:42px; right:42px; height:48px; z-index:20; background:rgba(255,245,247,0.88); backdrop-filter:blur(10px); border-top:1px solid var(--pink-soft); display:flex; align-items:center; justify-content:center; gap:48px; }
+  .bottom-nav a { font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:var(--brown-light); text-decoration:none; transition:color 0.2s; }
+  .bottom-nav a:hover { color:var(--pink-deep); }
+
+  .f-none { filter:none; }
+  .f-warm { filter:sepia(0.4) saturate(1.3) brightness(1.05); }
+  .f-rose { filter:sepia(0.2) hue-rotate(-20deg) saturate(1.5); }
+  .f-dream { filter:brightness(1.1) saturate(0.8) contrast(0.9); }
+  .f-vintage { filter:sepia(0.6) contrast(1.1) brightness(0.9); }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="film-edge left" id="filmL"></div>
+<div class="film-edge right" id="filmR"></div>
+<a href="choose-size.html" class="back-btn" data-nav>← back</a>
+
+<!-- Mode toggle (shown after choosing) -->
+<div class="mode-toggle" id="modeToggle">
+  <button class="mtab on" id="tabCamera">📸 Camera</button>
+  <button class="mtab" id="tabUpload">🖼 Upload</button>
+</div>
+
+<!-- ── MODE SELECTION SCREEN ── -->
+<div class="mode-screen" id="modeScreen">
+  <h1 class="mode-title">Ready to shoot? ♡</h1>
+  <p class="mode-sub">choose how you want to take your photos</p>
+  <div class="mode-divider"></div>
+  <div class="mode-cards">
+    <div class="mode-card" id="pickCamera">
+      <div class="mode-icon">📸</div>
+      <div class="mode-name">Live Camera</div>
+      <div class="mode-desc">Use your webcam to snap real-time photobooth shots — with filters, countdown timer &amp; flash!</div>
+      <div class="mode-badge">Take Photos ✦</div>
+    </div>
+    <div class="mode-card" id="pickUpload">
+      <div class="mode-icon">🖼</div>
+      <div class="mode-name">Upload Photos</div>
+      <div class="mode-desc">Already have photos you love? Upload them from your device to fill your strip.</div>
+      <div class="mode-badge">Choose Files ✦</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PHOTOBOOTH MAIN ── -->
+<div class="main" id="mainBooth">
+
+  <!-- LEFT: Camera / Upload -->
+  <div class="camera-section">
+
+    <!-- Camera frame -->
+    <div class="camera-frame" id="cameraFrame" style="display:none;position:relative;">
+      <div class="vf-corner tl"></div><div class="vf-corner tr"></div>
+      <div class="vf-corner bl"></div><div class="vf-corner br"></div>
+      <video id="video" autoplay playsinline></video>
+      <div class="flash" id="flash"></div>
+      <div class="countdown-overlay" id="countdownOverlay"></div>
+    </div>
+
+    <!-- Upload drop zone -->
+    <div class="upload-frame" id="uploadFrame">
+      <img class="upload-preview" id="uploadPreview" src="" alt="">
+      <div class="upload-placeholder">
+        <div class="upload-icon">🌸</div>
+        <div class="upload-text">tap to choose a photo</div>
+        <div class="upload-sub">jpg · png · webp · gif</div>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <!-- Filters (camera mode only) -->
+    <div class="filter-bar" id="filterBar">
+      <div class="filter-btn active" data-filter="f-none" title="None">✦</div>
+      <div class="filter-btn" data-filter="f-warm" title="Warm">☀</div>
+      <div class="filter-btn" data-filter="f-rose" title="Rose">🌸</div>
+      <div class="filter-btn" data-filter="f-dream" title="Dream">☁</div>
+      <div class="filter-btn" data-filter="f-vintage" title="Vintage">📷</div>
+    </div>
+
+    <!-- Shot counter -->
+    <div class="shot-counter" id="shotCounter"></div>
+    <div class="status-text" id="statusText"></div>
+
+    <!-- Controls -->
+    <div class="controls" id="controlsRow">
+      <button class="ctrl-btn" id="timerBtn" style="display:none">⏱ 3s</button>
+      <button class="shutter-btn" id="shutterBtn" style="display:none" aria-label="Take photo"></button>
+      <button class="ctrl-btn" id="retakeBtn" style="display:none">↺ retake</button>
+      <button class="ctrl-btn" id="addPhotoBtn" style="display:none">+ Add Photo</button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Strip preview -->
+  <div class="strip-section">
+    <div class="strip-label">Preview</div>
+    <div class="strip-preview" id="stripPreview"></div>
+    <button class="done-btn" id="doneBtn">done ✦</button>
+  </div>
+
+</div>
+
+<div class="bottom-nav">
+  <a href="index.html" data-nav>Home</a>
+  <a href="gallery.html" data-nav>Gallery</a>
+</div>
+
+<script>
+  window.addEventListener('load', () => setTimeout(() => document.body.classList.add('visible'), 50));
+  ['filmL','filmR'].forEach(id => {
+    const el=document.getElementById(id);
+    for(let i=0;i<22;i++){const h=document.createElement('div');h.className='film-hole';el.appendChild(h);}
+  });
+
+  /* ── Layout from URL ── */
+  const params = new URLSearchParams(location.search);
+  const layout = params.get('layout') || sessionStorage.getItem('pb_layout') || '1x4';
+  const [cols, rows] = layout.split('x').map(Number);
+  const totalShots = cols * rows;
+  const isGrid = cols > 1;
+
+  /* ── State ── */
+  let currentMode = null;
+  let currentShot = 0;
+  let useTimer = false;
+  let currentFilter = 'f-none';
+  const captures = new Array(totalShots).fill(null);
+  const slots = [];   // { el, img, ph, delBtn }
+  const dots = [];
+
+  /* ── Build strip preview ── */
+  const strip = document.getElementById('stripPreview');
+
+  function buildStripPreview() {
+    strip.innerHTML = '';
+
+    let container = strip;
+
+    if (isGrid) {
+      // For 2-col layouts, create a grid wrapper inside the polaroid
+      const grid = document.createElement('div');
+      grid.className = 'strip-grid';
+      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      strip.appendChild(grid);
+      container = grid;
+    }
+
+    for (let i = 0; i < totalShots; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'preview-slot';
+
+      if (isGrid) {
+        // Grid slots: square-ish cells
+        slot.style.width = '56px';
+        slot.style.height = '50px';
+        slot.style.marginBottom = '0';
+      } else {
+        // Single column: taller cells
+        slot.style.width = '96px';
+        slot.style.height = '72px';
+        slot.style.marginBottom = '5px';
+      }
+
+      const ph = document.createElement('span');
+      ph.textContent = '✿';
+      ph.style.cssText = 'font-size:16px;color:#c2637a;opacity:0.4;';
+
+      const img = document.createElement('img');
+      img.style.cssText = 'display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;';
+
+      // Delete button — lets user remove/replace a photo
+      const delBtn = document.createElement('button');
+      delBtn.className = 'slot-delete';
+      delBtn.innerHTML = '✕';
+      delBtn.title = 'Remove photo';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteSlot(i);
+      });
+
+      slot.appendChild(ph);
+      slot.appendChild(img);
+      slot.appendChild(delBtn);
+      container.appendChild(slot);
+      slots.push({ el: slot, img, ph, delBtn });
+    }
+
+    // Caption input inside polaroid
+    const cap = document.createElement('input');
+    cap.className = 'strip-caption-input';
+    cap.placeholder = 'add a caption ♡';
+    cap.maxLength = 30;
+    cap.id = 'captionInputInner';
+    strip.appendChild(cap);
+
+    updateSlotHighlight();
+  }
+
+  function updateSlotHighlight() {
+    slots.forEach((s, i) => {
+      s.el.classList.toggle('current', i === currentShot && captures[i] === null);
+    });
+  }
+
+  /* ── Delete a slot ── */
+  function deleteSlot(i) {
+    captures[i] = null;
+    slots[i].img.style.display = 'none';
+    slots[i].ph.style.display = '';
+    slots[i].el.classList.remove('filled');
+    dots[i].classList.remove('taken');
+    // Move currentShot back to this slot so user can refill it
+    currentShot = i;
+    document.getElementById('doneBtn').classList.remove('visible');
+    document.getElementById('shutterBtn').disabled = false;
+    updateSlotHighlight();
+    // Update session storage
+    try { sessionStorage.setItem('pb_captures', JSON.stringify(captures)); } catch(e){}
+    // Update status
+    const statusEl = document.getElementById('statusText');
+    if (currentMode === 'camera') {
+      statusEl.textContent = `Retaking shot ${currentShot + 1} of ${totalShots} ✿`;
+    } else {
+      statusEl.textContent = `Now upload photo ${currentShot + 1} of ${totalShots} ✿`;
+      // Reset upload frame so user can upload again
+      uploadFrame.classList.remove('has-img');
+      uploadPreview.src = '';
+    }
+  }
+
+  buildStripPreview();
+
+  // Shot counter dots
+  const counter = document.getElementById('shotCounter');
+  for (let i = 0; i < totalShots; i++) {
+    const d = document.createElement('div');
+    d.className = 'shot-dot';
+    counter.appendChild(d);
+    dots.push(d);
+  }
+
+  /* ── MODE SELECTION ── */
+  document.getElementById('pickCamera').addEventListener('click', () => startMode('camera'));
+  document.getElementById('pickUpload').addEventListener('click', () => startMode('upload'));
+  document.getElementById('tabCamera').addEventListener('click', () => switchModeTo('camera'));
+  document.getElementById('tabUpload').addEventListener('click', () => switchModeTo('upload'));
+
+  function startMode(mode) {
+    currentMode = mode;
+    document.getElementById('modeScreen').style.display = 'none';
+    document.getElementById('mainBooth').classList.add('active');
+    document.getElementById('modeToggle').classList.add('active');
+    switchModeTo(mode);
+  }
+
+  function switchModeTo(mode) {
+    currentMode = mode;
+    const isCam = mode === 'camera';
+
+    document.getElementById('tabCamera').classList.toggle('on', isCam);
+    document.getElementById('tabUpload').classList.toggle('on', !isCam);
+
+    document.getElementById('cameraFrame').style.display = isCam ? 'flex' : 'none';
+    document.getElementById('uploadFrame').classList.toggle('active', !isCam);
+    document.getElementById('filterBar').style.display = isCam ? 'flex' : 'none';
+    document.getElementById('timerBtn').style.display = isCam ? 'inline-block' : 'none';
+    document.getElementById('shutterBtn').style.display = isCam ? 'inline-block' : 'none';
+    document.getElementById('retakeBtn').style.display = isCam ? 'inline-block' : 'none';
+    document.getElementById('addPhotoBtn').style.display = !isCam ? 'inline-block' : 'none';
+
+    if (isCam) {
+      startCamera();
+      document.getElementById('statusText').textContent = currentShot < totalShots
+        ? `Ready — shot ${currentShot + 1} of ${totalShots} ✿`
+        : 'All shots done! 🎀';
+    } else {
+      stopCamera();
+      document.getElementById('statusText').textContent = currentShot < totalShots
+        ? `Tap to upload photo ${currentShot + 1} of ${totalShots} ✿`
+        : 'All photos added! 🎀';
+    }
+  }
+
+  /* ── CAMERA ── */
+  let cameraStream = null;
+
+  function startCamera() {
+    const video = document.getElementById('video');
+    // If stream already running, just re-attach
+    if (cameraStream) {
+      video.srcObject = cameraStream;
+      video.play().catch(()=>{});
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      document.getElementById('statusText').textContent = 'Camera API not supported — try upload mode!';
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width:{ideal:640}, height:{ideal:480} }, audio: false })
+      .then(s => {
+        cameraStream = s;
+        video.srcObject = s;
+        video.play().catch(()=>{});
+      })
+      .catch(err => {
+        let msg = 'Camera not available — try upload mode!';
+        if (err.name === 'NotAllowedError') msg = 'Camera permission denied. Please allow access & refresh.';
+        else if (err.name === 'NotFoundError') msg = 'No camera found — try upload mode!';
+        document.getElementById('statusText').textContent = msg;
+      });
+  }
+
+  function stopCamera() {
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  }
+
+  /* Filters */
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      document.getElementById('video').className = currentFilter;
+    });
+  });
+
+  /* Timer */
+  document.getElementById('timerBtn').addEventListener('click', () => {
+    useTimer = !useTimer;
+    document.getElementById('timerBtn').classList.toggle('active', useTimer);
+    document.getElementById('timerBtn').textContent = useTimer ? '⏱ ON' : '⏱ 3s';
+  });
+
+  /* Shutter */
+  document.getElementById('shutterBtn').addEventListener('click', () => {
+    if (currentShot >= totalShots) return;
+    if (useTimer) countdown(3, captureCamera);
+    else captureCamera();
+  });
+
+  function countdown(n, cb) {
+    document.getElementById('shutterBtn').disabled = true;
+    const el = document.getElementById('countdownOverlay');
+    el.classList.add('show'); el.textContent = n;
+    if (n <= 0) { el.classList.remove('show'); document.getElementById('shutterBtn').disabled = false; cb(); return; }
+    setTimeout(() => countdown(n - 1, cb), 1000);
+  }
+
+  function captureCamera() {
+    const flashEl = document.getElementById('flash');
+    flashEl.classList.add('active');
+    setTimeout(() => flashEl.classList.remove('active'), 150);
+
+    const video = document.getElementById('video');
+    const c = document.createElement('canvas');
+    c.width = video.videoWidth || 640;
+    c.height = video.videoHeight || 480;
+    const ctx = c.getContext('2d');
+
+    // Apply CSS filter if any (safely)
+    const computedFilter = getComputedStyle(video).filter;
+    if (computedFilter && computedFilter !== 'none') {
+      try { ctx.filter = computedFilter; } catch(e){}
+    }
+
+    // Mirror horizontally (since video is CSS-mirrored)
+    ctx.translate(c.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+
+    recordShot(c.toDataURL('image/jpeg', 0.92));
+  }
+
+  /* Retake (camera mode) */
+  document.getElementById('retakeBtn').addEventListener('click', () => {
+    currentShot = Math.max(0, currentShot - 1);
+    captures[currentShot] = null;
+    slots[currentShot].img.style.display = 'none';
+    slots[currentShot].ph.style.display = '';
+    slots[currentShot].el.classList.remove('filled');
+    dots[currentShot].classList.remove('taken');
+    document.getElementById('shutterBtn').disabled = false;
+    document.getElementById('doneBtn').classList.remove('visible');
+    updateSlotHighlight();
+    document.getElementById('statusText').textContent = `Retaking shot ${currentShot + 1} ✿`;
+  });
+
+  /* ── UPLOAD MODE ── */
+  const uploadFrame = document.getElementById('uploadFrame');
+  const fileInput = document.getElementById('fileInput');
+  const uploadPreview = document.getElementById('uploadPreview');
+
+  uploadFrame.addEventListener('click', () => {
+    if (currentShot >= totalShots) return;
+    fileInput.click();
+  });
+
+  document.getElementById('addPhotoBtn').addEventListener('click', () => {
+    if (currentShot >= totalShots) return;
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const src = e.target.result;
+      uploadPreview.src = src;
+      uploadFrame.classList.add('has-img');
+      recordShot(src);
+      fileInput.value = '';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Drag & drop
+  uploadFrame.addEventListener('dragover', e => { e.preventDefault(); uploadFrame.style.background = '#fde8ed'; });
+  uploadFrame.addEventListener('dragleave', () => { uploadFrame.style.background = ''; });
+  uploadFrame.addEventListener('drop', e => {
+    e.preventDefault(); uploadFrame.style.background = '';
+    if (currentShot >= totalShots) return;
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      uploadPreview.src = ev.target.result;
+      uploadFrame.classList.add('has-img');
+      recordShot(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  /* ── COMMON: record a shot ── */
+  function recordShot(dataURL) {
+    captures[currentShot] = dataURL;
+    slots[currentShot].img.src = dataURL;
+    slots[currentShot].img.style.display = 'block';
+    slots[currentShot].ph.style.display = 'none';
+    slots[currentShot].el.classList.add('filled');
+    dots[currentShot].classList.add('taken');
+
+    const statusEl = document.getElementById('statusText');
+    statusEl.textContent = `Photo ${currentShot + 1} of ${totalShots} added! ✿`;
+    currentShot++;
+    updateSlotHighlight();
+
+    if (currentShot >= totalShots) {
+      statusEl.textContent = 'All done! 🎀 Add a caption & hit Done.';
+      document.getElementById('shutterBtn').disabled = true;
+      document.getElementById('doneBtn').classList.add('visible');
+      try {
+        sessionStorage.setItem('pb_captures', JSON.stringify(captures));
+        sessionStorage.setItem('pb_layout', layout);
+      } catch(e){}
+      if (currentMode === 'upload') {
+        uploadFrame.classList.remove('has-img');
+        uploadPreview.src = '';
+      }
+    } else {
+      if (currentMode === 'upload') {
+        setTimeout(() => { uploadFrame.classList.remove('has-img'); uploadPreview.src = ''; }, 300);
+        statusEl.textContent = `Photo ${currentShot} added! Now add photo ${currentShot + 1} ✿`;
+      }
+    }
+  }
+
+  /* ── DONE → customize.html ── */
+  document.getElementById('doneBtn').addEventListener('click', () => {
+    const capEl = document.getElementById('captionInputInner');
+    const captionVal = capEl ? capEl.value || 'memories ♡' : 'memories ♡';
+
+    function compressDataURL(src, cb) {
+      if (!src) { cb(null); return; }
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        const scale = Math.min(1, 600 / img.width, 600 / img.height);
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        cb(c.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = () => cb(src);
+      img.src = src;
+    }
+
+    const compressed = new Array(captures.length).fill(null);
+    let done = 0;
+    if (captures.length === 0) { doNavigate([]); return; }
+
+    captures.forEach((src, i) => {
+      compressDataURL(src, result => {
+        compressed[i] = result;
+        if (++done === captures.length) doNavigate(compressed);
+      });
+    });
+
+    function doNavigate(imgs) {
+      try { sessionStorage.setItem('pb_captures', JSON.stringify(imgs)); } catch(e){}
+      try { sessionStorage.setItem('pb_layout', layout); } catch(e){}
+      try { sessionStorage.setItem('pb_caption', captionVal); } catch(e){}
+      stopCamera();
+      document.body.classList.add('fade-out');
+      setTimeout(() => window.location.href = 'customize.html', 450);
+    }
+  });
+
+  /* ── NAV ── */
+  document.querySelectorAll('[data-nav]').forEach(el => {
+    el.addEventListener('click', e => {
+      const href = el.getAttribute('href');
+      if (!href || href === '#') return;
+      e.preventDefault(); stopCamera(); document.body.classList.add('fade-out');
+      setTimeout(() => window.location.href = href, 450);
+    });
+  });
+</script>
+</body>
+</html>
