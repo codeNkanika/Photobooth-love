@@ -88,7 +88,8 @@
   .floating-cta {
     position: fixed;
     bottom: 64px;
-    right: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 25;
     padding: 14px 24px;
     background: var(--pink-deep);
@@ -103,7 +104,7 @@
     border-radius: 2px;
   }
   .floating-cta:hover {
-    transform: translate(2px, 2px);
+    transform: translateX(-50%) translate(2px, 2px);
     box-shadow: 2px 2px 0 var(--brown);
   }
 </style>
@@ -194,3 +195,4 @@
 </script>
 </body>
 </html>
+
