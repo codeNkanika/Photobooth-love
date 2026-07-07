@@ -1,21 +1,5 @@
-# 🎬 CineWatch
-
-A movie watchlist application built using Python and PostgreSQL.
+# 🎬 Photobooth-Love
 
 ## 🌐 Live Demo
 
-🔗 **Website:** https://celebrated-douhua-89602f.netlify.app/
-
-## Features
-
-- Add Movies
-- View Movies
-- Mark as Watched
-- Rate Movies
-- Delete Movies
-
-## Technologies Used
-
-- Python
-- PostgreSQL
-- psycopg2
+👉 **[Visit CineWatch](https://celebrated-douhua-89602f.netlify.app/)**
